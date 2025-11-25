@@ -117,6 +117,13 @@ resource "azurerm_route" "res-7" {
   ]
 }
 
+// This was removed?
+resource "random_password" "password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
 resource "azurerm_linux_virtual_machine" "res-2" {
   admin_username                  = "labsAdmin2023"
   admin_password                  = random_password.res-20.result
