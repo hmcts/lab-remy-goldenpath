@@ -118,7 +118,7 @@ resource "azurerm_route" "res-7" {
 }
 
 // This was removed?
-resource "random_password" "password" {
+resource "random_password" "res-20" {
   length           = 16
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
