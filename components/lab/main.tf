@@ -117,16 +117,60 @@ resource "azurerm_route" "res-7" {
   ]
 }
 
-// This was removed?
+// Add Random Password
 resource "random_password" "res-20" {
   length           = 16
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
+// Add Azure Key Vault
+resource "azurerm_key_vault" "example" {
+  name                        = "examplekeyvault"
+  location                    = azurerm_resource_group.res-0.location
+  resource_group_name         = azurerm_resource_group.res-0.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = false
+
+  sku_name = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Get",
+    ]
+
+    secret_permissions = [
+      "Get",
+    ]
+
+    storage_permissions = [
+      "Get",
+    ]
+  }
+}
+
+# Store admin username
+resource "azurerm_key_vault_secret" "vm_username" {
+  name         = "vm-admin-username"
+  value        = "labsAdmin2023"
+  key_vault_id = azurerm_key_vault.example.id
+}
+
+# Store random admin password
+resource "azurerm_key_vault_secret" "vm_password" {
+  name         = "vm-admin-password"
+  value        = random_password.vm_admin.result
+  key_vault_id = azurerm_key_vault.example.id
+}
+
 resource "azurerm_linux_virtual_machine" "res-2" {
-  admin_username                  = "labsAdmin2023"
-  admin_password                  = random_password.res-20.result
+  admin_username                  = azurerm_key_vault_key.vm_username.value
+  admin_password                  = azurerm_key_vault_key.vm_password.value
   location                        = azurerm_resource_group.res-0.location
   name                            = local.vnet_name
   network_interface_ids           = [azurerm_network_interface.res-3.id]
